@@ -26,12 +26,15 @@ sections/
   09-appendix-b-reliability.tex
   10-references.tex
 fig/                           Reserved for figures; this manuscript has none
+sample_code.py                 Runnable code included directly in Appendix A
+calc.py                        Python 3 calculator and approximation comparison
+tests/test_calc.py             Numerical regression tests
 scripts/package-overleaf.py    Source-only ZIP packager
 ```
 
 ## Build
 
-Install a TeX distribution containing pdfLaTeX, latexmk, and the geometry package, such as [MacTeX](https://tug.org/mactex/) or [TeX Live](https://tug.org/texlive/). Packaging requires Python 3.
+Install a TeX distribution containing pdfLaTeX, latexmk, and the geometry package, such as [MacTeX](https://tug.org/mactex/) or [TeX Live](https://tug.org/texlive/). Packaging and the calculator require Python 3.8 or newer.
 
 ```sh
 make
@@ -49,20 +52,35 @@ Upload the ZIP as a new [Overleaf](https://www.overleaf.com/) project. Select `r
 
 ## Preservation and provenance
 
-This project reorganizes `report6.tex`, dated July 19, 2013 within the manuscript. Its prose, equations, table, author affiliations, appendix code, section numbering, and four bibliography entries are preserved. Bibliographic entries remain in their original order in an editable `thebibliography` environment.
+This project reorganizes `report6.tex`, dated July 19, 2013 within the manuscript. Its prose, equations, table, author affiliations, section numbering, and four bibliography entries are preserved except for the sample-code corrections and their directly affected numerical example described below. Bibliographic entries remain in their original order in an editable `thebibliography` environment.
 
 All 17 original files are preserved byte for byte in the local `Attic/`, verified by a SHA-256 manifest. Existing files within `Attic/` retain their paths; former root files and the `auto/` directory were moved into it. The archive includes two PDFs, older LaTeX drafts, editor files, `calc.py`, the workbook, author photos, and `r2014_july.rtf`. That later formatted RTF version has editorial differences and is not the source of this refactoring. Author photos are not used by the LaTeX manuscript.
 
 The local archive, validation records, build intermediates, and distribution ZIP are excluded from Git. The final root PDF is tracked.
 
+## Sample-code corrections
+
+Appendix A now includes [sample_code.py](sample_code.py) directly with LaTeX's `verbatiminput`, so the printed and executable versions share one source. The corrected implementation uses `math.comb` for the binomial coefficient and sums every term in the failure tail with `math.fsum`. The parity search considers zero disks and enforces the strict probability threshold. Input validation rejects invalid probabilities, counts, and unattainable targets such as a per-disk failure probability of one.
+
+[calc.py](calc.py) is a runnable Python 3 replacement for the archived calculator. It uses `statistics.NormalDist` instead of the invalid `math.norm` import, shares the corrected probability functions, and keeps example output behind a main guard. The Rodrigues-Liskov approximation remains available for comparison, with the paper's original caveats.
+
+```sh
+python3 calc.py
+python3 -m unittest discover -s tests -v
+```
+
+For `p=0.005`, `m=8`, and a target below `1e-6`, the minimum parity count remains **3**, giving redundancy **1.375**. The corrected full-tail probability is **2.0054667412485275e-7**. The manuscript's directly affected value changes from `1.99e-7` to `2.01e-7` (three significant figures).
+
+These floating-point calculations are intended for small erasure-code groups, as in the paper. They are not a general-purpose numerical library for very large groups or extreme probability tails.
+
 ## Validation
 
-- The final PDF has 13 pages, matching the archived `report6.pdf` page count.
-- Every page has identical extracted text and an identical rendered image at 900 pixels on the longer edge compared with a fresh build of the unmodified `report6.tex` using the same installed TeX toolchain.
-- The page overview was visually inspected. The original 4.92314-point overfull-box warning in Appendix A and three underfull-box warnings in the bibliography remain; text is not clipped. There are no unresolved references.
-- The extracted Overleaf ZIP compiled locally and produced identical page text. The Overleaf service itself was not tested.
-- The older archived PDF has text-extraction differences, including ligatures and spacing. Exact equivalence is established against a fresh original-source build, not that historical PDF binary.
+- Five tests cover exhaustive enumeration of small systems, the paper's example and minimum parity count, endpoint probabilities, zero parity, strict threshold equality, invalid inputs, and normal-approximation identities.
+- The corrected PDF and extracted Overleaf package compile locally. The package includes both Python source files; Appendix A is typeset from the runnable source.
+- The original Appendix A overfull-box warning is eliminated. Three original bibliography underfull-box warnings remain, with no unresolved references.
+- The initial structural refactoring matched a fresh original-source build page for page in extracted text and rendered pixels. The current revision intentionally changes the sample code and its directly affected numerical example.
+- Original files remain unchanged in the local archive. The Overleaf service itself was not tested.
 
 ## Historical limitations
 
-This is a structural refactoring, not a technical or editorial revision. Original claims, URLs, spelling, and sample-code defects remain. In particular, Appendix A defines a binomial coefficient using `factorial(a + b)` where a choose operation is needed, and its `prob_fail` function returns inside the summation loop. The separately archived `calc.py` also returns inside that loop, imports a nonexistent `math.norm`, and uses Python 2 print syntax. Neither is presented as validated executable software. Correcting the numerical examples, code, and derivations requires a separate reviewed revision.
+Original claims, URLs, spelling, and mathematical derivations otherwise remain as written. The archived `calc.py` and original Appendix A preserve the historical errors for provenance. This correction is not a comprehensive technical review of the manuscript.

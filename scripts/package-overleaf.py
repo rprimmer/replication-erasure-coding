@@ -6,7 +6,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / 'dist' / 'replication-erasure-coding-overleaf.zip'
 files = [ROOT / name for name in (
-    'replication-erasure-coding.tex', 'preamble.tex', 'macros.tex', 'metadata.tex', 'OVERLEAF.md')]
+    'replication-erasure-coding.tex', 'preamble.tex', 'macros.tex', 'metadata.tex', 'OVERLEAF.md', 'sample_code.py', 'calc.py')]
 files += sorted((ROOT / 'sections').glob('*.tex'))
 files += sorted((ROOT / 'fig').glob('*.tex'))
 DEST.parent.mkdir(exist_ok=True)
