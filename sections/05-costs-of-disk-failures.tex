@@ -1,0 +1,53 @@
+\section{Costs of disk failures}
+
+For a fixed level of reliability, erasure coding requires less disk space than replication. If storage cost were the only consideration, erasure coding would have a clear advantage over replication. However, there are other factors to consider, and these factors depend on usage scenarios.
+
+While erasure coding can lower the probability of a catastrophic failure, it increases the probability of a recoverable failure. The probability that one or more disks in a set will fail is approximately the probability of a particular disk failing times the number of disks.\footnote{The probability that \emph{exactly} one out of a set of $m$ disks will fail is $mp$ if $p$ is the probability of an individual failure. But the probability of one \emph{or more} failures is $1-(1-p)^m$ which is approximately $mp$ if $p$ is small.} An example given above compared triple replication to $8+3$ erasure coding. Both systems had roughly the same probability of data loss. Replication used 3 disks per object while erasure coding used 11, and so the erasure coded system is nearly 4 times as likely to experience a single, recoverable disk failure.
+
+If a disk failure is recoverable, what is its cost? The cost is not in maintenance. The cost of replacing hard disks is proportional to the total number of disks in use, whether those disks contain replicated objects or erasure encoded object fragments. Erasure encoding does not increase the number of disk failures. By reducing the number of disks needed, it can \emph{reduce} the number of failures. However, erasure encoding increases the probability that an object request is effected by a disk failure, and this may increase latency.
+
+\subsection{Latency}
+
+If all replicas and all erasure encoded fragments are in the same data center, latency is not as much of an issue as when replicas and encoded fragments are geographically separated. 
+
+In a replicated system, requests could be routed to the nearest available replica (nearest in terms of latency, which usually means physically nearest though not necessarily). If the nearest replica is not available, the request would fail over to the next nearest replica and so on until a replica is available or the request fails. In an $m+n$ erasure encoded system, an object request could be filled by reconstructing the object from the $m$ nearest fragments. Since object requests more often encounter (recoverable) disk failures in an erasure encoded systems, they will more often involve an increase in latency.
+
+Suppose a replicated system maintains $k$ copies of an object, each in a different data center, and that requesting data from these centers has latency $L_1 < L_2 < \ldots < L_k$ for a given user. Suppose each replica has a probability $p$ of being unavailable. With probability $1-p$ the latency in the object request will be $L_1$. With probability $p(1-p)$ the latency will be $L_2$. The expected latency will be
+
+\[ \sum_{i=1}^k p^{i-1}(1-p) L_i \]
+
+If $p$ is fairly small, the terms involving higher power of $p$ will be negligible and the sum above will be approximately
+
+\[ (1-p)L_1 + p L_2\]
+
+dropping terms that involve $p^2$ and higher powers of $p$.
+
+For example, if there is a probability 0.001 that an object is available at the nearest data center, and the second data center has 100 times greater latency, the expected latency is 10\% greater (i.e. $p L_2/L_1 = 0.001*100 = 0.1$) than if both replicas were located in the nearest data center.
+
+In an erasure encoded system, fragments could be geographically distributed in many ways. If latency is a concern, an $m+n$ system would store at least $m$ fragments in a single location so that only local reads would be necessary under normal circumstances. If $m$ fragments are stored in one location, the probability of one local disk failure is $mp$. This means the probability of a single local failure, and the necessity of transferring data from a more distant data center, is $m$ times greater for an erasure coded system compared to a replicated system. The expected latency increases from approximately $(1-p)L_1 + pL_2$ in a replicated system to approximately $(1-p)L_1 + mpL_2$ in an erasure encoded system. 
+
+To illustrate this, suppose in the example above that we pick our units so that the latency of the nearer server is $L_1 = 1$. If $m = 8$, the expected latency would be 
+% 0.999*1 + 0.001*100 
+1.099 using replication and
+% 0.999*1 + 0.001*100*8
+1.799 using erasure coding. 
+
+For active data, objects that are accessed frequently, latency is a major concern and the latency advantage of replication should be considered. For inactive data, objects are archived and seldom accessed, latency may be less of a concern.
+
+\subsection{Reconstruction}
+
+When an object request fails, it must be determined exactly what has failed. This is a much simpler task in a replicated system than in an EC system.
+
+Once the failed disk has been identified, in either a replicated or an erasure coded system, its data must be copied onto a replacement disk. The cost of rebuilding the disk depends on where the data are coming from, whether locally within a data center or remotely from another center. 
+
+With replication, the content of a failed disk is simply copied, either from within a data center or from a remote data center, depending on how replicas are distributed.
+
+With $m+n$ erasure coding, the content of $m$ disks must be brought to one location. Huang \emph{et al} \cite{lrc} give the example of $6+3$ encoding. If three fragments are stored in each of three data centers and one disk fails, the content of four disks must be transferred from a remote data center to the site of the failed disk in order to have enough data for reconstruction. 
+
+The authors propose \emph{local reconstruction codes} \cite{lrc} as a variation on erasure codes to mitigate this problem. With this approach, two data centers would each contain three data disks and a local parity disk. A third data center would contain two global parity disks computed from all six data disks. They call this approach 6+2+2. Any single failure could be repaired locally. Since single failures are most likely, this reduces the average reconstruction time. The $6+2+2$ scheme offers a level of data protection intermediate between $6+3$ and $6+4$ Reed-Solomon codes. The $6+2+2$ system can recover from any combination of three-disk failures, and from 86\% of four-disk failures.
+
+The cost of reconstructing a disk is lowest with replication, highest with traditional Reed-Solomon erasure coding, and intermediate with local reconstruction codes.
+
+The time necessary for reconstruction feeds back into the data protection calculations. If failed disks can be reconstructed faster, availability improves, increasing the availability of the system or possibly enabling the system to use fewer disks.
+
+

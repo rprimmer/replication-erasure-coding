@@ -1,0 +1,23 @@
+\section{Appendix $B$: Increasing $m+n$ increases reliability} 
+
+Let $m$ and $n$ be fixed positive integers. Let $p$ be the probability of a single disk being dead at any time. Assume $p < n/(m+n)$.
+
+We start with an $m+n$ EC system and increase $m$ and $n$ proportionately, resulting in a $km + kn$ system. As we increase $k$, the probability of data loss, i.e the probability of more than $kn$ failures, goes to zero as $k$ increases.
+
+To see why this is so, let $X$ be a Binomial($km + kn$, $p$) random variable and let $Y$ be a normal random variable with mean $k(m+n)p$ and variance $k(m+n)p(1-p)$. As $k$ increases, the probability distribution of $X$ converges to the probability distribution of $Y$. 
+
+For any positive $k$, 
+\[ \mathrm{Prob}(X > kn) \approx \mathrm{Prob}(Y > kn) \]
+and the error in the approximation decreases with $k$, becoming exact in the limit. Let $Z$ be a standard normal random variable. Then $Y$ has the same distribution as 
+\[\sqrt{k(m+n)p(1-p)} Z  + k(m+n)p\]
+and so we have the following.
+
+\begin{eqnarray*}
+\mathrm{Prob}(X > kn) &\approx& \mathrm{Prob}(Y > kn) \\
+&=& \mathrm{Prob}(\sqrt{k(m+n)p(1-p)} Z + k(m+n)p > kn) \\
+&=& \mathrm{Prob}\left(Z > \sqrt{k} \frac{(1-p)n - mp}{(m+n)p(1-p)}\right) 
+\end{eqnarray*}
+
+The assumption $p < n/(m+n)$ implies that $(1-p)n - mp > 0$ and so 
+\[ \lim_{k\to\infty} \mathrm{Prob}\left(Z > \sqrt{k} \frac{(1-p)n - mp}{(m+n)p(1-p)}\right) = 0.\]
+

@@ -1,0 +1,14 @@
+\section{Introduction}
+
+To protect data from device or system failures storage systems employ mechanisms for data protection so that data can be provided to clients in the face of failure. There are a variety of means for providing data protection (DP), in this paper we will focus on two: \emph{replication} and \emph{erasure coding}. 
+
+Providing data protection necessarily results in the consumption of additional storage. The additional storage needed to implement a given DP scheme is referred to as \emph{storage overhead}. A DP mechanism that uses less overhead is said to be more \emph{storage efficient}, meaning it requires less storage overhead to provide equivalent data protection. 
+
+Replication is a process where a whole object is replicated some number of times, thus providing protection if a copy of an object is lost or unavailable. In the case of replicating a whole object, the overhead would be 100\% for a single replica, 150\% for two replicas and so forth. Erasure coding is a process where data protection is provided by slicing an individual object in such a way that data protection can be achieved with greater storage efficiency --- that is, some value less that 100\%.  
+
+Most papers on erasure coding focus on the relative storage efficiency of erasure coding (EC) versus replication. However, these papers often ignore details of EC implementation that have an impact on performance, nor do they address the issue of data availability. 
+
+Replication is a special case of EC, using only one data disk. The parity disks in this case are necessarily replicas. However, EC typically refers to other configurations, varying the number of data disks and parity disks to achieve the same amount of protection against data loss with fewer disks or to achieve greater protection against data loss with the same number of disks. However, an EC system may not provide as much protection against data unavailability relative to a replicated system with the same protection against data loss. An erasure coded system may also have more latency than a comparable replicated system.
+
+In this paper we demonstrate that EC is advantageous for ``cold'' data --- data which is unlikely to be accessed or for which read performance is not an issue, and that replication is superior for ``hot'' data --- content which is accessed frequently or for which performance is important. This paper gives guidance for choosing between replication and erasure coding in the large space between ``hot'' and ``cold'' data. In particular, the more emphasis one places on availability and read performance, the greater the advantage of replication; the more emphasis one places on storage efficiency, the greater the advantage of erasure coding. 
+

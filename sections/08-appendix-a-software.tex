@@ -1,0 +1,31 @@
+\section{Appendix $A$: Software} 
+
+\begin{verbatim}
+from math import sqrt, factorial
+
+def binomial(a, b):
+    return factorial(a + b)/(factorial(a)*factorial(b))
+
+def prob_fail(p, m, n):
+    """Probability of more than n failures in an m+n system 
+    when each component has probability of failure p."""
+    sum = 0
+    for i in range(n+1, m+n+1):
+        sum += binomial(m+n, i)*p**i*(1-p)**(m+n-i)
+        return sum
+
+def parity_disks_needed(epsilon, p, m):
+    """
+    Solve for number of parity disks to achieve specified reliability.
+    epsilon = acceptable probability of data loss
+    p = probability of single disk failure
+    m = number of data disks
+    """
+
+    n = 0
+    while True:
+        n += 1
+        if prob_fail(p, m, n) < epsilon:
+            return n  
+\end{verbatim}
+

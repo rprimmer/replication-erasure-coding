@@ -1,0 +1,21 @@
+\section{Data availability}
+
+Enterprise-class data storage systems are designed to protect against data loss (DL) and data unavailability (DU). Data loss refers to permanent loss, data that cannot be retrieved by any means. Data unavailability refers to data that is temporarily unavailable but that can be retrieved after some undetermined delay. Said another way, DL and DU refer to data being permanently and temporarily inaccessible.
+
+Cold data is often stored on tape due to the low cost of tape as a storage medium. The downside of storing data on tape is that it is generally less readily available compared to data stored on disk. Therefore, for cases where availability is important the increased expense of disk storage is justified. 
+
+For data to be \emph{highly available} in a multi-data center environment means that the data must be distributed amongst the various data centers (DCs) in such a way that all data can still be read in the event that any one DC is unavailable. 
+
+Data availability calculations are sometimes incorrectly conflated with data loss calculations. While the two can be identical for a single site, they diverge when we talk about multisite. For example, assume we have two DCs and want our data to be highly available, what is the \emph{minimum} amount of overhead required to protect against DU? The answer is 100\%, and this answer is the same irrespective of the DP scheme employed to protect against DL.
+
+This answer can feel counterintuitive at first blush as it may seem that each DC need only house 50\% of the total data. However when we consider that for clients to be able to read the data when one of the data centers is unavailable requires that \emph{all} of the data be available from the only data center that's reachable, the answer makes sense. The table below illustrates how data must be spread across DCs to provide full data availability (i.e. full data access in the event of the failure of any one DC), independent of the data protection scheme employed. 
+ 
+\begin{tabular}{l*{2}{c}l}
+DCs & Minimum overhead for N+1 \\
+\hline
+2 & 100\% (100/100) \\
+3 & 50\% (50/50/50) \\
+4 & 33\% (33/33/33/33) \\
+5 & 25\% (25/25/25/25/25) \\
+\end{tabular}
+

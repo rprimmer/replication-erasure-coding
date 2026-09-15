@@ -1,0 +1,6 @@
+\section{Efficiency considerations}
+
+In a replicated system, the operating system directly locates objects. In the event of a failure, requests are redirected to another server, but in the usual case objects are accessed directly. 
+
+With erasure coding, fragments of objects must be cataloged. Since the bits necessary to reconstruct an object exist on multiple disks, a system must keep track of where each of these fragments are located. When an object is requested from an $m+n$ system, a server looks up the location of at least $m$ fragments. (The details of this process are implementation dependent. A server could, for example, randomly choose $m$ fragments or try to determine the $m$ closest fragments.) If the requests succeed, these $m$ fragments are transferred to a server to be re-assembled into the requested object. Since assembly cannot begin until the last fragment is available, the process would be slowed down if one of the fragments were coming from a location further away than the others.
+

@@ -1,0 +1,12 @@
+\section{Trade-offs}
+
+In a system with a large volume of active data -- objects accessed frequently -- and in which it is important to minimize latency, replication has the advantage. A content delivery network (CDN), for example, would use replication over erasure coding. 
+
+On the other hand, a system with mostly inactive data -- archival objects accessed rarely -- and primarily concerned with storage costs, would be better off using erasure coding. Such a system might also want to use a moderately large value of $m$ in its $m+n$ encoding.
+
+A hybrid approach, one used by Microsoft Asure \cite{lrc}, is to use both replication and erasure coding. Objects are replicated on entering the system. Later they are erasure encoded and the replicas are deleted. This way active data is served by replication and inactive data is served by erasure coding. 
+
+In the Azure implementation, the cost of encoding fragments is not a significant concern. Because objects are replicated immediately, encoding can be done out of band. A system that encodes objects as they enter might be more concerned about encoding costs.
+
+One could also use a hybrid approach of using $k$ replications of $m+n$ erasure encoded fragments. In such a case, $k$ and $n$ might be very small. For example, $n$ might be 1 or 2, and $k=2$ or 3 might be the number of data centers. 
+

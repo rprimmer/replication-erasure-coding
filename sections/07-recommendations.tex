@@ -1,0 +1,6 @@
+\section{Recommendations}
+
+In summary, we recommend beginning by estimating the reliability of individual components and the desired reliability of the overall system. Then one could use equation (\ref{kreplication}) to determine the necessary number replicas $k$ or use equation (\ref{ecfailure2}) to determine the number of fragments in an $m+n$ erasure coded system. 
+
+Replicated systems are simpler to implement and can have lower latency and reconstruction costs. Erasure encoded systems require less disk space and hence have lower storage costs. A system primarily used for serving active data as quickly as possible would probably use replication. A system primarily used for archiving would benefit from erasure coding. A system with mixed use might choose a compromise, such as erasure coding with a small number of data fragments per object, depending on the relative importance of latency, reconstruction costs, and storage/maintenance costs. Or such a system could use both replication and erasure coding, moving objects from the former to the latter as they are accessed less frequently.
+

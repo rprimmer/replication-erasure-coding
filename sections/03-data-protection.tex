@@ -1,0 +1,78 @@
+\section{Data protection}
+
+Data loss can occur when either a disk has died or when a disk is still working, but the blocks that hold the data being read have gone bad. For our purposes we'll just consider either case to have the same effect on our system. 
+
+Let $p_L$ be the probability that a single disk is dead, permanently unreadable. Once a disk has been replaced, its function has been restored and we could think of the original disk coming back to life. Data loss does not necessarily happen when disks die but when too many disks are in a dead state simultaneously.
+
+An estimate of $p_L$ depends on the mean time between failures as well as the time required to replace the disk. For example, suppose a disk performs reliably on average for 1000 days, roughly three years. If a hot spare is available to replace the disk upon failure and it takes one day to format the disk and copy data to it, $p_L = 0.001$. If there isn't a hot spare and it takes a couple days to order and install a replacement disk and a day to fill it, $p_L = 0.003$. 
+
+Similarly let $p_U$ be the probability that a disk is unavailable. A disk may be unavailable yet still alive. For example, a disk may be in perfect order but temporarily disconnected from the network. Because disks can be temporarily unavailable without failing, say due to a network outage, $p_L$ is always smaller than $p_U$.
+
+\subsection{Replication}
+
+In a replicated system with $k$ replicas of each object, the probability of data loss is $p_L^k$, \emph{assuming disk failures are independent}. (We will discuss this independence assumption later.) Given a tolerable probability of data loss $\varepsilon$, we can solve for the number of disks $k$ needed keep the probability of loss below this level:
+
+\begin{equation}
+ k = \frac{\log \varepsilon}{\log p_L} \label{kreplication}
+\end{equation}
+
+The same calculation applies to data unavailability if we replace $p_L$ with $p_U$, again assuming independence. Some causes of unavailability may have independent probabilities, but as we discuss in Section \ref{DC}, disks located within a data center risk simultaneous unavailability due to the data center going offline temporarily.
+
+\subsection{Erasure coding}
+
+In an $m+n$ erasure encoded system, each object is divided into $m$ equal-sized fragments. In addition $n$ parity fragments are created, each the size of one of the data fragments. The data can be read if any $m$ out of the $m+n$ fragments are available. Stated negatively, data will be lost if more than $n$ fragments are simultaneously lost. In this section we will focus on data loss. Similar considerations apply for data unavailability, though there is an important distinction between data loss and data unavailability that matters more for than for replication. More on this below.
+
+Since we need $m$ out of $m+n$ disks to reconstruct an object, the probability of data loss is the probability of more than $n$ disks being dead simultaneously:
+
+\begin{equation}
+\sum_{i=n+1}^{m+n} {m+n \choose i} p_L^i (1-p_L)^{m+n-i} \label{ecfailure1}
+\end{equation}
+
+Define $k_c = (m+n)/m$. This is the redundancy factor for $m+n$ erasure coding, analogous to $k$ for replication. For a fixed redundancy level, an erasure encoded system has at least the same level of reliability as the corresponding replicated system. (In general, an erasure encoded system will have greater reliability, but one could consider replication as a special case of erasure coding with $m = 1$ in which case of course the systems would have equal reliability.) Stated another way, for a fixed level of reliability, an erasure encoded system requires less disk space or can store more data with the same amount of disk space.
+
+Given a number of data fragments $m$ and an acceptable probability of unavailability $\varepsilon$, you can solve for the smallest value of $n$ such that
+\begin{equation}
+\sum_{i=n+1}^{m+n} {m+n \choose i} p_L^i (1-p_L)^{m+n-i} < \varepsilon \label{ecfailure2}
+\end{equation}
+See Appendix $A$ for a Python script to solve for $n$. 
+
+For example, suppose you would like to build a system with probability of data recovery 0.999999 (six nines) using disks that have probability 0.995 of being alive. Triple replication would have a probability of DL equal to $0.005^3 = 1.25 \times 10^{-7}$. Suppose you want to use erasure coding with 8 data disks. The script in the appendix shows that an $8+n$ system would require $n=3$ to keep the probability of DL below $10^{-6}$. In fact, an $8+3$ system has a probability of DL $1.99 \times 10^{-7}$. A 1 GB video stored in the triple replicated system would require 3 GB of storage. In an 8+3, the same object would be stored in 8 data fragments and 3 parity fragments, each 125 MB in size, for a total of 1.375 GB. In short, the erasure coded system would use about half as much disk space and offer the same level of data protection.
+
+(The number of parity disks $n$ is best calculated numerically as mentioned above, though there are (incorrect) analytical solutions in the literature. Rodrigues and Liskov \cite{rl} give an analytical solution for (\ref{ecfailure2}) by using a normal (Gaussian) approximation to the binomial distribution Bin($m+n$, $p$). However, the parameters $m+n$ and $p$ are typically outside the range for the normal approximation to be reliable. The estimate for $k_c$ given in that paper has a large error. In the example above where we concluded 3 parity disks were needed, the approximation of Rodrigues and Liskov says 1.054 disks are needed. Even if you round 1.054 up to 2, this is still short of the 3 disks necessary.)
+
+\subsubsection{Choosing the number of data disks}
+
+Given a value of $m$ and the individual disk reliability, the discussion above describes how to choose $n$ to achieve the desired level of protection. But how do you choose $m$?
+
+Increasing $n$ while holding $m$ fixed increases reliability. Increasing $m$ while holding $n$ fixed \emph{decreases} reliability. But in a sense, we gain more reliability by increasing $n$ than we lose by increasing $m$. We can increase reliability by increasing $m$ and $n$ proportionately, this keeping the redundancy factor $k_c$ constant. See Appendix $B$ for a precise statement and proof.
+
+For example, a $4+2$ system will be more reliable than a $2+1$ system even though both have the same redundancy $k_c = 1.5$. So why not make $m$ and $n$ larger and larger, obtaining more and more reliability for free? Of course the increase in $m$ and $n$ is not free, though the cost is subtle.
+
+Larger values of $m$ and $n$ do result in greater data protection for a fixed level of disk reliability. However, while larger values of $m$ and $n$ reduce the chance of complete failure (irrecoverable data loss), they \emph{increase} the chance of at least one recoverable disk failure. As we will describe below, this potentially increases latency and reconstruction costs.
+
+Increasing $m$ and $n$ also increases the total number of data fragments $m+n$ to manage. In practice, erasure encoded systems use values of $m$ on the order of 10, not on the order of 100.  For example, you may see $6+3$ systems or $12+4$ systems, but not $100+50$ systems. One reason is that you can obtain high levels of data protection without resorting to large values of $m$. Another is that erasure encoded systems typically have on the order of millions of object fragments. A rough calculation shows why this is so. There must be a database to keep track of each fragment. If this database is kept in memory, it has to be on the order of gigabytes. If each record in the database is on the order of a kilobyte, the table can contain on the order of a million rows, and so the number of fragments is kept on the order of millions in order to fit the corresponding database in memory.
+
+Aside from the memory required to keep an inventory of data fragments, there is also the time required to find and assemble the fragments. The required time depends greatly on how EC is implemented, but is always some amount of time, and hence an overhead associated with EC that is not required with replication. This explains why an EC system can be slower than a replicated system, even when all fragments are in the same data center.
+
+Finally, we note that the more data fragments there are to manage, the more work required to rebuild the fragment inventory database when failures occur.
+
+\subsection{Allocating disks to data centers} \label{DC}
+
+The previous sections have not considered how disks are allocated to data centers. This allocation impacts EC more than replication, and DU more than DL.
+
+It is far more likely that an entire data center would be unavailable than that an entire data center would be destroyed. Data centers are occasionally inaccessible due to network outages. This causes all disks inside to be simultaneously unavailable. However, it is very unlikely that all disks in a data center would fail simultaneously, barring a natural disaster or act of war. This means that DU is more correlated than DL.
+
+In replicated systems, it is common for one replica of each object to reside in each data center. If we assume network failures to data centers are independent, then the same probability calculations apply to data loss and data unavailability. If there are $d$ data centers, the probabilities of an object being lost or unavailable are $p_L^d$ and $p_U^d$ respectively.
+
+However, in EC systems, the number of fragments per object is typically larger than the number of data centers. A company often has two or three data centers; more than four would be very unusual, especially for a mid-sized company. And yet EC systems using a scheme such as 8+4 are not uncommon. With fewer than 12 data centers, some of these fragments would have to be co-located.
+
+If every fragment in an EC system were stored in a separate data center, the unavailability calculations would be analogous to the data loss calculations, as they are for replicated systems. But because data fragments are inevitably co-located, these fragments have correlated probabilities of being unavailable and so the unavailability probability for the system goes up. 
+
+\subsection{Probability assumptions}
+
+Reliability calculations, whether for replicated systems or erasure encoded systems, depend critically on the assumption of independence. Disk failures could be correlated for any number of reasons -- disks coming from the same manufacturing lot, disks operating in the same physical environment, etc. -- and so reliability estimates tend to be inflated \cite{goog}. Researchers from Carnegie Mellon have shown that, for example, that disk failures are correlated in time \cite{cmu}. That is, if you've had more failures than usual this week, you're likely to have more failures than usual next week too, contrary to the assumption of independence. To be cautious one should look for ways to improve independence and be skeptical of extremely small probabilities calculated based on independence assumptions. 
+
+The assumption of independence is more accurate for disks in separate data centers. And so for replicated systems with each replica in a separate data center, independence is a reasonable assumption. But for EC systems with multiple fragments in each data center, the assumption of independence is less justified for data loss, and unjustified for data unavailability.
+
+Also keep in mind that when the probability of any cause of failure is sufficiently small, other risks come to dominate. One could easily build an erasure coded system with theoretical probability of failure less than $10^{-12}$, a one in a trillion chance. But such probabilities are meaningless because other risks are much larger. Presumably the chance of an earthquake disabling a data center, for example, is larger than $10^{-12}$.
+
