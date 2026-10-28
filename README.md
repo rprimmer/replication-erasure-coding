@@ -54,7 +54,7 @@ Upload the ZIP as a new [Overleaf](https://www.overleaf.com/) project. Select `r
 
 This project reorganizes `report6.tex`, dated July 19, 2013 within the manuscript. Its prose, equations, table, author affiliations, section numbering, and four bibliography entries are preserved except for the sample-code corrections and their directly affected numerical example described below. Bibliographic entries remain in their original order in an editable `thebibliography` environment.
 
-All 17 original files are preserved byte for byte in the local `Attic/`, verified by a SHA-256 manifest. Existing files within `Attic/` retain their paths; former root files and the `auto/` directory were moved into it. The archive includes two PDFs, older LaTeX drafts, editor files, `calc.py`, the workbook, author photos, and `r2014_july.rtf`. That later formatted RTF version has editorial differences and is not the source of this refactoring. Author photos are not used by the LaTeX manuscript.
+All 17 original files are preserved byte for byte in the local `_attic/`, verified by a SHA-256 manifest. Existing files within `_attic/` retain their paths; former root files and the `auto/` directory were moved into it. The archive includes two PDFs, older LaTeX drafts, editor files, `calc.py`, the workbook, author photos, and `r2014_july.rtf`. That later formatted RTF version has editorial differences and is not the source of this refactoring. Author photos are not used by the LaTeX manuscript.
 
 The local archive, validation records, build intermediates, and distribution ZIP are excluded from Git. The final root PDF is tracked.
 
